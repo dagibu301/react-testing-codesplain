@@ -1,14 +1,16 @@
 import { render, screen } from "@testing-library/react";
-import { setupServer } from 'msw/node';
-import { rest } from 'msw';
 import { MemoryRouter } from "react-router-dom";
 import HomeRoute from "./HomeRoute";
+import { createServer } from "../test/server";
 
-const handlers = [
-    rest.get('/api/repositories', (req, res, ctx) => {
-        const language = req.url.searchParams.get('q').split('language:')[1];
-        return res(
-            ctx.json({
+
+createServer([
+    {
+        path: '/api/repositories',
+        method: 'get',
+        res: (req) => {
+            const language = req.url.searchParams.get('q').split('language:')[1];
+            return {
                 items: [
                     {
                         id: 1,
@@ -19,15 +21,10 @@ const handlers = [
                         full_name: `${language}_2`,
                     },
                 ]
-            })
-        )
-    })];
-
-const server = setupServer(...handlers);
-
-beforeAll(() => server.listen());
-afterEach(() => server.resetHandlers());
-afterAll(() => server.close());
+            }
+        }
+    }
+])
 
 describe('Home Route component', () => {
     it('should render two links for each language', async () => {
